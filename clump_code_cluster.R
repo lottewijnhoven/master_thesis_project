@@ -191,4 +191,3 @@ clump.function <- function(wget,chrs,cores=1,ld.threshold=0.1){
     ## remove GWAS file
     system(paste0("rm ",strsplit(wget,"-O ")[[1]][2]))
 }
-##chr22_clumps_summary_total[[i]] <- set_summary
