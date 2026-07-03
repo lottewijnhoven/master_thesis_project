@@ -57,18 +57,14 @@ gwas_ggplot <- gwas_ages %>%
 chr_centers <- chr_offsets + chr_lengths / 2
 
 #Create vectors for each of the categories, containing the SNPs that belong to the category (example here for urate)
-GxE <- c("4:103112470:A:G", "6:81433192:G:T")
-vQTL <- c("2:27730940:T:C", "4:9970570:A:G")
+GxE <- c("4:103112470:A:G", "6:81433192:G:T", "4:9936437:G:C")
+vQTL <- c("2:27730940:T:C", "4:9970570:A:G", "6:25759066:G:T")
 both <- c("4:89054667:A:G", "4:89052323:G:T")
-no_sel_GxE <- "4:9936437:G:C"
-no_sel_vQTL <- "6:25759066:G:T"
 
 #For each of SNPs in the categories, get the necessary data from the dataset
 snps_GxE <- gwas_ggplot %>% filter(SNP %in% GxE)
 snps_vQTL <- gwas_ggplot %>% filter(SNP %in% vQTL)
 snps_both <- gwas_ggplot %>% filter(SNP %in% both)
-snps_ns_GxE <- gwas_ggplot %>% filter(SNP %in% no_sel_GxE)
-snps_ns_vQTL <- gwas_ggplot %>% filter(SNP %in% no_sel_vQTL)
 
 #Give each of the SNPs in the categories a corresponding label (in a new column, named 'SNP_set')
 gwas_ggplot <- gwas_ggplot %>%
@@ -76,8 +72,6 @@ gwas_ggplot <- gwas_ggplot %>%
     SNP %in% GxE ~ "GxE",
     SNP %in% vQTL ~ "vQTL",
     SNP %in% both ~ "Both",
-    SNP %in% no_sel_GxE ~ "No sel GxE",
-    SNP %in% no_sel_vQTL ~ "No sel vQTL",
     TRUE ~ "Other"
   ))
 
@@ -114,8 +108,7 @@ ggplot(gwas_ggplot, aes(x = x_coordinate, y = -log10(pval), color = group)) +
     "Not in AGES" = "grey"
   )) +
   scale_shape_manual(values = c(
-    "GxE" = 17, "vQTL" = 15, "Both" = 18,
-    "No sel GxE" = 3, "No sel vQTL" = 7
+    "GxE" = 17, "vQTL" = 15, "Both" = 18
   )) +
   labs(
     title = "Manhattan plot of urate GWAS with selection",
