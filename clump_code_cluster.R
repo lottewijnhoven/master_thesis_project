@@ -1,11 +1,7 @@
-## Urate
+## Retrieve the GWAS summary statistics files for the traits of interest
+
+## Example for the trait 'urate'
 wget="wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/30880_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz -O 30880_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz"
-
-## LDL-C
-wget="wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/30780_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz -O 30780_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz"
-
-## Cholestorol
-wget="wget https://broad-ukb-sumstats-us-east-1.s3.amazonaws.com/round2/additive-tsvs/30690_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz -O 30690_irnt.gwas.imputed_v3.both_sexes.varorder.tsv.bgz"
 
 ## function to perform clumping of GWAS loci
 clump.function <- function(wget,chrs,cores=1,ld.threshold=0.1){
