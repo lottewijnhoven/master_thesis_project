@@ -1,0 +1,107 @@
+#This script describes how the chromosomal windows of interest for the clumping algorithm were selected
+
+#Load the necessary packages
+library(data.table)
+library(dplyr)
+library(GenomicRanges)
+
+#Read in the GWAS summary statistics file for the trait of interest, and modify to contain a separate column for 'chromosome', 'position', 'reference', 'alternative'
+#and re-create a SNP column by merging these columns again
+
+gwas <- fread("...")
+gwas <- gwas %>%
+  separate(variant, into = c("chromosome", "position", "reference", "alternative"), sep = ":")
+gwas$SNP <- paste(gwas$chromosome, gwas$position, gwas$reference, gwas$alternative, sep = ":")
+
+#Filter the file for only SNPs with genome-wide significance
+gwas_sign <- gwas %>%
+  filter(pval < 5e-8)
+
+#Create an object containing the length of all chromosomes in the human genome
+chr_lengths <- c("1"= 249250621, "2"= 243199373, "3"= 198022430, "4"= 191154276, "5"= 180915260, "6"= 171115067, "7"= 159138663, "8"= 146364022,
+                 "9"= 141213431, "10"= 135534747, "11"= 135006516, "12"= 133851895, "13"= 115169878, "14"= 107349540, "15"= 102531392, "16"= 90354753,
+                 "17"= 81195210, "18"= 78077248, "19"= 59128983, "20"= 63025520, "21"= 48129895, "22"= 51304566)
+
+#Create a subset of the modified summary statistics file for each of the autosomes
+chr1 <- subset(gwas_sign, chromosome == 1)
+chr2 <- subset(gwas_sign, chromosome == 2)
+chr3 <- subset(gwas_sign, chromosome == 3)
+chr4 <- subset(gwas_sign, chromosome == 4)
+chr5 <- subset(gwas_sign, chromosome == 5)
+chr6 <- subset(gwas_sign, chromosome == 6)
+chr7 <- subset(gwas_sign, chromosome == 7)
+chr8 <- subset(gwas_sign, chromosome == 8)
+chr9 <- subset(gwas_sign, chromosome == 9)
+chr10 <- subset(gwas_sign, chromosome == 10)
+chr11 <- subset(gwas_sign, chromosome == 11)
+chr12 <- subset(gwas_sign, chromosome == 12)
+chr13 <- subset(gwas_sign, chromosome == 13)
+chr14 <- subset(gwas_sign, chromosome == 14)
+chr15 <- subset(gwas_sign, chromosome == 15)
+chr16 <- subset(gwas_sign, chromosome == 16)
+chr17 <- subset(gwas_sign, chromosome == 17)
+chr18 <- subset(gwas_sign, chromosome == 18)
+chr19 <- subset(gwas_sign, chromosome == 19)
+chr20 <- subset(gwas_sign, chromosome == 20)
+chr21 <- subset(gwas_sign, chromosome == 21)
+chr22 <- subset(gwas_sign, chromosome == 22)
+
+#Create a list containing the modified GWAS summary statistics for all chromosomes
+chromosomes <- list(chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22)
+
+#Create an empty list
+merged_gwas <- list()
+
+#Create a for loop, that loops over the modified GWAS summary statistics for each of the chromosomes
+for (i in 1:length(chromosomes)) {
+  
+  chr_data <- chromosomes[[i]]
+
+  #Create a GRanges object containing all posible windows for each of the chromosomes
+  windows <- unlist(slidingWindows(
+    GRanges(seqnames = paste0("chr", i),
+            ranges = IRanges(1, chr_lengths[i])),
+    width = 3000001,
+    step = 1000000
+  ))
+
+  #Add a metadata column containing the corresponding window IDs 
+  mcols(windows)$window_id <- paste0("chr", i, "_", seq_along(windows))
+
+#Create another Granges object, this time containing the information for each of the genome-wide significant SNPs in the GWAS
+  g_ranges <- GRanges(
+    seqnames = paste0("chr", i),
+    ranges = IRanges(start = chr_data$position, end = chr_data$position),
+    SNP = chr_data$SNP,
+    P = chr_data$pval
+  )
+
+  #Find overlaps between both Granges objects to see which SNP belongs to which window(s)
+  hits <- findOverlaps(g_ranges, windows)
+
+  #Create a new dataframe containing all necessary information for the SNPs, including the IDs of the window(s) they fall into
+  merged_chr <- data.frame(
+    SNP = mcols(g_ranges)$SNP[queryHits(hits)],
+    P = mcols(g_ranges)$P[queryHits(hits)],
+    position = start(g_ranges)[queryHits(hits)],
+    window_id = mcols(windows)$window_id[subjectHits(hits)],
+    start = start(windows)[subjectHits(hits)],
+    end = end(windows)[subjectHits(hits)],
+    chromosome = rep(i, length(queryHits(hits)))
+  )
+
+  #Add the dataframe for the current chromosome to the initally created list
+  merged_gwas[[i]] <- merged_chr
+}
+
+#Convert the final list into a dataframe
+merged_gwas_all <- bind_rows(merged_gwas)
+
+#Create a column in the dataframe containing the link for downloading each of the files corresponding to the chromosome windows of interest
+merged_gwas_all$filename_npz <- paste0("http://broad-alkesgroup-ukbb-ld.s3.amazonaws.com/UKBB_LD/", "chr", merged_gwas_all$chromosome, "_",
+                                       merged_gwas_all$start, "_",
+                                       merged_gwas_all$end, ".npz"
+)
+
+#Create the final object while removing any duplicate download links
+files_to_download_npz <- unique(merged_gwas_all$filename_npz)
