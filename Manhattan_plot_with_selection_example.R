@@ -29,8 +29,8 @@ chr_offsets <- cumsum(chr_lengths) - chr_lengths
 #Make sure the position column is numerical
 gwas$position <- as.numeric(gwas$position)
 
-#Give the pvalues noted down as '0' an extremely low value instead
-gwas$pval[gwas$pval == 0] <- .Machine$double.xmin
+#Give the pvalues noted down as '0' the lowest possible value in R instead
+gwas$pval[gwas$pval == 0] <- 5e-324
 
 #Filter to include only GWAS summary statistics for the autosomes
 gwas <- gwas %>%
