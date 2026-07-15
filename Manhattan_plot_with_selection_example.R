@@ -57,7 +57,7 @@ gwas_ggplot <- gwas_ages %>%
 chr_centers <- chr_offsets + chr_lengths / 2
 
 #Create vectors for each of the categories, containing the SNPs that belong to the category (example here for urate)
-GxE <- c("4:103112470:A:G", "6:81433192:G:T", "4:9936437:G:C")
+GxE <- c("4:103112470:A:G", "6:81432310:C:A", "4:9936437:G:C")
 vQTL <- c("2:27730940:T:C", "4:9970570:A:G", "6:25759066:G:T")
 both <- c("4:89054667:A:G", "4:89052323:G:T")
 
